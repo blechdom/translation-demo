@@ -1,11 +1,10 @@
 'use strict';
 const express = require('express');
-const os = require('os');
 const path = require('path');
 const bodyParser = require('body-parser');
 const speech = require('@google-cloud/speech');
-const textToSpeech = require('../../texttospeech-v1beta1/src/v1beta1/index.js');
-var readline = require('readline');
+const textToSpeech = require('@google-cloud/text-to-speech');
+const {Translate} = require('@google-cloud/translate');
 const app = express();
 
 const server = require('http').Server(app);
@@ -28,18 +27,21 @@ io.on('connection', socket => {
     id: socket.id,
     speechClient: new speech.SpeechClient(),
     ttsClient: new textToSpeech.TextToSpeechClient(),
+    translate: new Translate(),
     recognizeStream: null,
     restartTimeoutId: null,
     ttsText: '',
-    voiceCode: '',
-    speechLanguageCode: 'en-US',
+    translateText: '',
+    voiceCode: 'fr-FR',
+    speechLanguageCode: 'fr-FR-Wavenet-A',
+    sttLanguageCode: 'en-US',
     speechModel: 'default',
     useEnhanced: 'false',
     enableAutomaticPunctuation: 'true',
   }
 
-  socket.on('tts-text', function(data){
-    clientData[socket.id].ttsText = data;
+  socket.on('translate-text', function(data){
+    clientData[socket.id].translateText = data;
     //ttsText = data;
   });
 
@@ -52,6 +54,10 @@ io.on('connection', socket => {
   socket.on('speechLanguageCode', function(data) {
     clientData[socket.id].speechLanguageCode = data;
 
+  });
+  socket.on('sttLanguageCode', function(data) {
+    clientData[socket.id].sttLanguageCode = data;
+    console.log("stt language code is " + data);
   });
 
   socket.on('speechModel', function(data){
@@ -158,7 +164,7 @@ io.on('connection', socket => {
 
   socket.on("getAudioFile", function(data){
     console.log("getting audio file");
-    ttsWriteAndSendAudio(socket.id);
+    ttsTranslateAndSendAudio();
   });
 
   socket.on('disconnect', function() {
@@ -180,9 +186,21 @@ io.on('connection', socket => {
     });
   });
 
-  async function ttsWriteAndSendAudio(){
+  async function ttsTranslateAndSendAudio(){
 
-    //ttsClient = new textToSpeech.TextToSpeechClient();
+    var translateLanguageCode = clientData[socket.id].voiceCode.substring(0, 2); //en
+    var target = translateLanguageCode;
+    console.log("translating into " + target);
+    var text = clientData[socket.id].translateText;
+    console.log("text to translate: " + text);
+    let [translations] = await clientData[socket.id].translate.translate(text, target);
+    translations = Array.isArray(translations) ? translations : [translations];
+    var translation_concatenated = "";
+    translations.forEach((translation, i) => {
+      translation_concatenated += translation + " ";
+    });
+    clientData[socket.id].ttsText = translation_concatenated;
+    socket.emit("getTranslation", translation_concatenated);
 
     var ttsRequest = {
       voice: {languageCode: clientData[socket.id].voiceCode.substring(0,5), name: clientData[socket.id].voiceCode},
@@ -232,7 +250,7 @@ io.on('connection', socket => {
         config: {
             encoding: 'LINEAR16',
             sampleRateHertz: 16000,
-            languageCode: clientData[socket.id].speechLanguageCode,
+            languageCode: clientData[socket.id].sttLanguageCode,
             enableAutomaticPunctuation: clientData[socket.id].enableAutomaticPunctuation,
             model: clientData[socket.id].speechModel,
             useEnhanced: clientData[socket.id].useEnhanced
@@ -255,17 +273,17 @@ io.on('connection', socket => {
               transcript: data.results[0].alternatives[0].transcript,
               isfinal: data.results[0].isFinal
             };
-            if(speakToo){
-              socket.emit("getTranscriptSpeakToo", transcriptObject);
-            }
-            else{
+            //if(speakToo){
+          //    socket.emit("getTranscriptSpeakToo", transcriptObject);
+            //}
+            //else{
               socket.emit("getTranscript", transcriptObject);
-            }
+          //  }
 
             if((data.results[0].isFinal)&&(speakToo==true)){
               console.log("also sending audio file");
-              clientData[socket.id].ttsText = transcriptObject.transcript;
-              ttsWriteAndSendAudio();
+              clientData[socket.id].translateText = transcriptObject.transcript;
+              ttsTranslateAndSendAudio();
             }
           }
         });

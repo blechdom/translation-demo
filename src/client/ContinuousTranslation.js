@@ -20,7 +20,7 @@ class SpeechTextSpeech extends React.Component {
   }
 
   componentDidMount() {
-    console.log("sts mounted");
+    //console.log("sts mounted");
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
     socket.on('audiodata', (data) => {
@@ -71,7 +71,7 @@ class SpeechTextSpeech extends React.Component {
     return (
       <React.Fragment>
         <Typography variant="h6" gutterBottom style={{ padding: 8 * 3 }}>
-          Speech-To-Text-To-Speech
+          Continuous Translation
         </Typography>
           <Grid container spacing={24}>
             <Grid item xs={12}>

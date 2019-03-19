@@ -9,9 +9,8 @@ import Tab from '@material-ui/core/Tab';
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import TextToSpeechForm from './TextToSpeechForm';
-import SpeechToTextForm from './SpeechToTextForm';
-import SpeechTextSpeechForm from './SpeechTextSpeechForm';
+import StopStartTranslation from './StopStartTranslation';
+import ContinuousTranslation from './ContinuousTranslation';
 
 
 const styles = theme => ({
@@ -63,7 +62,7 @@ class CloudAIDemos extends React.Component {
     super(props)
     this.state = {
       value: 0,
-      currentForm: <SpeechTextSpeechForm />
+      currentForm: <StopStartTranslation />
     };
   }
   handleChangeIndex = index => {
@@ -73,13 +72,10 @@ class CloudAIDemos extends React.Component {
     let formName = '';
     switch (value) {
       case 0:
-        formName = <SpeechTextSpeechForm />;
+        formName = <StopStartTranslation />;
         break;
       case 1:
-        formName = <TextToSpeechForm />;
-        break;
-      case 2:
-        formName = <SpeechToTextForm />;
+        formName = <ContinuousTranslation />;
         break;
       default:
         throw new Error('Unknown Tab');
@@ -99,24 +95,13 @@ class CloudAIDemos extends React.Component {
           <Paper className={classes.paper}>
             <AppBar position="static">
               <Typography component="h1" variant="h4" className={classes.title} align="center">
-                Cloud AI Demos
+                Speech-to-Speech Translation
               </Typography>
             </AppBar>
-            <Tabs
-              value={this.state.value}
-              indicatorColor="primary"
-              textColor="primary"
-              onChange={this.getTabContent}
-              variant="fullWidth"
-            >
-              <Tab label="Speech-To-Text-To-Speech" />
-              <Tab label="Text-To-Speech" />
-              <Tab label="Speech-To-Text"/>
 
-            </Tabs>
             <React.Fragment>
               <div className={classes.form}>
-                {this.state.currentForm}
+                <StopStartTranslation />
               </div>
             </React.Fragment>
           </Paper>

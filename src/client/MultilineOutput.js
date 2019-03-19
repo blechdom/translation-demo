@@ -15,6 +15,9 @@ const styles = theme => ({
   pendingText: {
     color: '#b7e1cd',
   },
+  translatedText: {
+    color: '#ee918d',
+  },
 });
 
 class MultilineOutput extends React.Component {
@@ -26,6 +29,7 @@ class MultilineOutput extends React.Component {
       multiline: 'Controlled',
       outputText: '',
       newText: '',
+      newTranslation: '',
       concatText: '',
       isFinal: false,
     };
@@ -33,30 +37,11 @@ class MultilineOutput extends React.Component {
 
   componentDidMount() {
     const { classes } = this.props;
-    console.log("stt text mounted, speak too is " + this.props.speakToo);
+    //console.log("stt text mounted, speak too is " + this.props.speakToo);
     let socket = this.props.socket;
-    if(this.props.speakToo=="true"){
-      socket.on('getTranscriptSpeakToo', (response) => {
-        console.log(JSON.stringify(response));
-        this.setState({newText: response.transcript});
-        if (this.state.newText != undefined){
-          this.setState({outputText: <div>{this.state.concatText} <div className={classes.pendingText}>{this.state.newText}</div></div>});
-          if (response.isfinal){
-            this.setState({
-              isFinal: true,
-              concatText: <div>{this.state.concatText} {this.state.newText}</div>,
-            }, () => {
-              this.setState({outputText: <div>{this.state.concatText}</div>});
-            });
-          }
-        }
-        this.setState({newText: ''});
-        this.setState({isFinal: false});
-      });
-    }
-    else {
+
       socket.on('getTranscript', (response) => {
-        console.log(JSON.stringify(response));
+        //console.log(JSON.stringify(response));
         this.setState({newText: response.transcript});
         if (this.state.newText != undefined){
           this.setState({outputText: <div>{this.state.concatText} <div className={classes.pendingText}>{this.state.newText}</div></div>});
@@ -69,15 +54,36 @@ class MultilineOutput extends React.Component {
             });
           }
         }
+        //this.setState({newText: ''});
+        //this.setState({isFinal: false});
+      });
+      socket.on('getTranslation', (response) => {
+        //console.log(JSON.stringify(response));
+        this.setState({
+          concatText: <div>{this.state.concatText} <div className={classes.translatedText}>{response}</div></div>,
+          outputText: <div>{this.state.concatText} <div className={classes.translatedText}>{response}</div></div>
+        });
+
+
+
+      //  this.setState({newTranslation: response});
+      //  this.setState({
+      //    concatText: <div>{this.state.concatText} {this.state.newText}</div>,
+      //  }, () => {
+      //    this.setState({outputText: <div>{this.state.concatText}</div>});
+      //  });
+      //  this.setState({outputText: <div>{this.state.concatText} <div className={classes.translatedText}>{this.state.newTranslation}</div></div>});
+
+
+        this.setState({newTranslation: ''});
         this.setState({newText: ''});
         this.setState({isFinal: false});
       });
-    }
 
   }
 
   componentWillUnmount(){
-    console.log("stt text unmounted");
+    //console.log("stt text unmounted");
     let socket = this.props.socket;
     socket.off("getTranscript");
   }

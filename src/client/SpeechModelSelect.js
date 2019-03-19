@@ -5,7 +5,7 @@ import { withStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import { socket } from './api';
+
 
 const styles = theme => ({
   root: {
@@ -41,6 +41,7 @@ class SpeechModelSelect extends React.Component {
   handleSpeechModelChange = (event) => {
     this.setState({ speechModel: event.target.value });
     console.log("speech model selected is " + event.target.value);
+    let socket = this.props.socket;
     socket.emit("speechModel", event.target.value);
   };
 

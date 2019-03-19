@@ -15,15 +15,15 @@ const constraints = {
   video: false
 };
 
-function playAudioBuffer(audioFromString, context, speakToo){
+function playAudioBuffer(audioFromString, context, continuous){
 
   if (active_source){
     source.stop(0);
     source.disconnect();
     active_source=false;
   }
-  if(speakToo){
-    //stopStreaming(context, speakToo);
+  if(continuous){
+    stopStreaming(context, continuous);
   }
 
   context.decodeAudioData(audioFromString, function (buffer) {
@@ -37,8 +37,8 @@ function playAudioBuffer(audioFromString, context, speakToo){
       active_source = true;
       source.onended = (event) => {
         console.log('audio playback stopped');
-        if(speakToo){
-        //  startStreaming(context, speakToo);
+        if(continuous){
+          startStreaming(context, continuous);
         }
       };
   }, function (e) {
@@ -65,7 +65,7 @@ function disconnectSource(context){
     active_source=false;
   }
 }
-function initRecording(context, speakToo) {
+function initRecording(context, continuous) {
 
   concatText = "";
   newText = "";
@@ -105,17 +105,17 @@ function microphoneProcess(e) {
   socket.emit('binaryStream', left16);
 }
 
-function startStreaming(context, speakToo) {
+function startStreaming(context, continuous) {
   console.log("start input");
-  socket.emit("startStreaming", speakToo);
-  initRecording(context, speakToo);
+  socket.emit("startStreaming", true);
+  initRecording(context, continuous);
 }
 
-function stopStreaming(context, speakToo) {
+function stopStreaming(context, continuous) {
   console.log("stop input");
-  socket.emit("stopStreaming", speakToo);
+  socket.emit("stopStreaming", true);
 
-
+  if(!continuous){
     let track = globalStream.getTracks()[0];
     track.stop();
 
@@ -124,6 +124,9 @@ function stopStreaming(context, speakToo) {
       input.disconnect(processor);
       processor.disconnect();
     }
+  }
+
+
 
 }
 var downsampleBuffer = function (buffer, sampleRate, outSampleRate) {

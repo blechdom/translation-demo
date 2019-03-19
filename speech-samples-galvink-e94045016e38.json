@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "speech-samples-galvink",
+  "private_key_id": "e94045016e38e6f07da8d52222176ef1a626cf77",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDXDMNIJq7Mft8e\ns0Ga59VAjDQlOu3dhG4l++1e5zR+YGdCTcQJzTXWzDJsAvZf9CA0bkn77LypyLLJ\nOnEpAdgwaVubMwuKGt1as8Kl03dfcynSNHtDT5AjRVmaGlgNIcuR8U8LECxF06i7\nD99A4ltFhCCuCfr2uVKszrhnafVGy2tileRup3Fagu3CzqZFnS3AKmjf3nTYyyDK\nsmk1Tdz2y9Q2MRGr8ZH48aS92qfNqgLT5y35ugkk9LOPo2Iw//JO7Ta1ql/5B4Rf\nIAYqXLlKbGkDVGEre17TjTKgxJS3YZIwGkMLMeAGvSmJrQGCw6W6jftJdsSjGPBi\nbg9irIrVAgMBAAECggEAB3Zl/UYwp/JwkGTPDlxtlz5T/cVR8xPcdTrWKRiRkB+x\nk1ZfXRdste8egj107xugjHgV3wU2I6ngV4oDkWeC6PcpSEeGr+pCmSyGd98Zyt2m\nj/HlkWnlwO3dy3uzjBZBfrCCFZzW/ZtTe/m8z+zPhLplQxBEmSJ/EQfzr4OUI0zt\nU2BTZX4qSI/4wDVrMBPgYEg8k/62e+6A6reRq5AUVyiMNHh9RUMlxeR5MIBf/2G5\nOG76OWI4FGz+Uci+BJgazJHZl2NfSQeenmB2xzp9eG8g/uJeG9z4DMW3ad9gfl9F\nbDER+DmnKT9fTtyIpCQX92LRtNtmnM/XYvmwkHKAhwKBgQD+g/Q+01KdH4d0qoLc\nDi84bz50D0tUThGbLJZQ99N3667MTvfll2Fzh4EzYZ6IjYXWFuoLq/00H68ge0H5\nRzyceMMCeLBgYpXndeNrrmyGavpX1jb8tKzmKm2lCaSFONgq7ufEzBWLu7kafw5d\nSUY3lgBl2u0LdhpkZOG9RiOpSwKBgQDYTeDQbTA0sLKwEDJBzXcW4hqAjD8RCBvh\nvIMlUr26cksFhWvniAA9M45ojQBAwiWJxdGuhUummERjnBSQu1b4VKHohL/vURj5\nbtf73VFzIfP8D347gRDAIyGbSg6UXe1QIGB9ke37Flz625WzQbJru6IZv/GLi95r\nQRZe8dcoXwKBgFdDWsznm52vn7vKco+MdXg9/AXC8Kr5EWRIx0j/j4vATPBT6v7X\nBlycCxpY0Ag1rbuXo6tYzrm+W0chu58CY6+qYAJK6v5BDvCLJOxYo3D64NaY5cWD\nFPzdczZwte3PbZ5axzBcYM7GEFMbWQt3AhIw5fYGN9wEJExjolpI4BU9AoGACkp6\nPbBUMM2PUs0Sdwr9dXtAY4lIntjR6sV7P9VV7X7ujs6wOY3A5SiEx/idYHdcLdfZ\niAITfVOVPV/5ooEnPB1arqNSNmKXW5aoc/UtoNqmrwFVsiML1vhU6vx1AR4O4lcI\nADFnLyD7P3we/S5M/M8qgSsepNL8vAGWvOGoqOUCgYEAiiK+tijludhzGCfcANWv\n4LzdHlmxtJrcGUVAmC8ES74uDWFrqhkLtjdkbZiiwKMHsJOMF8sTg5WbrwqGG6I2\nXv7tK16gtDMdujT2VSyOMsh5T3AUk8zcAOw+w2pyWNVJQPlcr7Z8UwLKCXPgI+o1\nXPCrBo9KSJXluSATSahF8AI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "galvink-speech@speech-samples-galvink.iam.gserviceaccount.com",
+  "client_id": "105387650792672483304",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/galvink-speech%40speech-samples-galvink.iam.gserviceaccount.com"
+}

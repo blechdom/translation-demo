@@ -7,6 +7,7 @@ import FormControl from '@material-ui/core/FormControl';
 import SpeechModelSelect from './SpeechModelSelect';
 import Select from '@material-ui/core/Select';
 import Grid from '@material-ui/core/Grid';
+import STTSelect from './STTSelect';
 import { getVoiceList } from './api';
 
 const styles = theme => ({
@@ -29,10 +30,11 @@ class LanguageSelects extends React.Component {
 
   constructor(props) {
     super(props);
+    let socket = this.props.socket;
     this.state = {
       name: '',
       labelWidth: 0,
-      languageCode: 'en-US',
+      languageCode: 'fr-FR',
       voices: [],
       voiceSynth: '',
       voiceSynthOptions: '',
@@ -40,14 +42,17 @@ class LanguageSelects extends React.Component {
       voiceTypes: [],
       voiceTypeOptions: '',
       speechModelCode: '',
+      sttLanguageCode: <Grid item xs={12}><STTSelect socket={socket}/></Grid>,
+      sttCode: 'en-US'
     };
   }
 
   componentDidMount() {
     this._isMounted = true;
+    let socket = this.props.socket;
     if(this.props.speechModel=="true"){
       this.setState({
-        speechModelCode:     <Grid item xs={6}><SpeechModelSelect/></Grid>,
+        speechModelCode: <Grid item xs={6}><SpeechModelSelect socket={socket}/></Grid>,
       });
     }
 
@@ -99,14 +104,11 @@ class LanguageSelects extends React.Component {
     );
     this.setState({voiceTypes: voiceObjects});
     this.setState({voiceSynthOptions: voiceSynthOptionItems});
-    if(languageCode=='en-US'){
-      voiceSynthOptionItems.push(<option key='Tacotron2' value='Tacotron2'>Tacotron2</option>);
-      this.setState({voiceSynth: "Wavenet"}, () => this.populateVoiceTypeSelect());
-
+    if(voiceSynthOptionItems.length>1){
+      this.setState({voiceSynth: voiceSynthOptionItems[1].key}, () => this.populateVoiceTypeSelect());
     }
     else {
       this.setState({voiceSynth: voiceSynthOptionItems[0].key}, () => this.populateVoiceTypeSelect());
-
     }
   }
   populateVoiceTypeSelect(){
@@ -150,11 +152,12 @@ class LanguageSelects extends React.Component {
     return (
       <div className={classes.root}>
         <Grid container spacing={24}>
+        {this.state.sttLanguageCode}
           <Grid item xs={6}>
             <FormControl className={classes.formControl}>
               <InputLabel ref={ref => {
                 this.InputLabelRef = ref;
-              }} htmlFor="language-select">Language</InputLabel>
+              }} htmlFor="language-select">Translate To</InputLabel>
               <Select
                 native
                 value={this.state.languageCode}
