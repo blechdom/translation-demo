@@ -1,0 +1,7 @@
+node_modules
+dist
+package-lock.json
+audio/*mp3
+cloud-tts-demo-831ac3535e61.json
+transcriptions/*json
+transcriptionsJSON.zip
