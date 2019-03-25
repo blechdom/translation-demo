@@ -60,7 +60,7 @@ io.on('connection', socket => {
     console.log("stt language code is " + data);
   });
 
-  socket.on('speechModel', function(data){
+  /*socket.on('speechModel', function(data){
     let speechModel = data;
     let useEnhanced = "false";
     console.log("speech model updated " + speechModel);
@@ -75,11 +75,12 @@ io.on('connection', socket => {
     clientData[socket.id].useEnhanced = useEnhanced;
     clientData[socket.id].speechModel = speechModel;
   });
+  */
 
-  socket.on('speechPunctuation', function(data){
+/*  socket.on('speechPunctuation', function(data){
     clientData[socket.id].enableAutomaticPunctuation = data;
   });
-
+*/
   socket.on('speechEnhanced', function(data){
     clientData[socket.id].useEnhanced = data;
   });

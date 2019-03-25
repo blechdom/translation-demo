@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
-import SpeechModelSelect from './SpeechModelSelect';
+//import SpeechModelSelect from './SpeechModelSelect';
 import Select from '@material-ui/core/Select';
 import Grid from '@material-ui/core/Grid';
 import STTSelect from './STTSelect';
@@ -17,7 +17,7 @@ const styles = theme => ({
   },
   formControl: {
     margin: theme.spacing.unit,
-    minWidth: 220,
+    minWidth: 260,
   },
   selectEmpty: {
     marginTop: theme.spacing.unit * 2,
@@ -32,7 +32,6 @@ class LanguageSelects extends React.Component {
     super(props);
     let socket = this.props.socket;
     this.state = {
-      name: '',
       labelWidth: 0,
       languageCode: 'fr-FR',
       voices: [],
@@ -52,7 +51,7 @@ class LanguageSelects extends React.Component {
     let socket = this.props.socket;
     if(this.props.speechModel=="true"){
       this.setState({
-        speechModelCode: <Grid item xs={6}><SpeechModelSelect socket={socket}/></Grid>,
+      //  speechModelCode: <Grid item xs={6}><SpeechModelSelect socket={socket}/></Grid>,
       });
     }
 
@@ -81,7 +80,7 @@ class LanguageSelects extends React.Component {
   };
   handleVoiceChange = (event) => {
     console.log("handle voice change " + event.target.value);
-    this.props.handleFormValidation(event.target.value);
+    //this.props.handleFormValidation(event.target.value);
     this.setState({ voiceType: event.target.value }, () => this.emitVoiceCode());
   };
 
@@ -151,9 +150,11 @@ class LanguageSelects extends React.Component {
 
     return (
       <div className={classes.root}>
-        <Grid container spacing={24}>
-        {this.state.sttLanguageCode}
-          <Grid item xs={6}>
+        <Grid container spacing={12}>
+          <Grid item xs={12} sm={6}>
+            {this.state.sttLanguageCode}
+          </Grid>
+          <Grid item xs={12} sm={6}>
             <FormControl className={classes.formControl}>
               <InputLabel ref={ref => {
                 this.InputLabelRef = ref;
@@ -171,25 +172,25 @@ class LanguageSelects extends React.Component {
              </Select>
             </FormControl>
           </Grid>
-            <Grid item xs={6}>
-              <FormControl className={classes.formControl}>
-                <InputLabel ref={ref => {
-                  this.InputLabelRef = ref;
-                }} htmlFor="synth-select">Synthesis</InputLabel>
-                <Select
-                  native
-                  value={this.state.voiceSynth}
-                  onChange={this.handleSynthChange}
-                  inputProps={{
-                    name: 'synth_select',
-                    id: 'synth-select',
-                  }}
-                >
-                 {this.state.voiceSynthOptions}
-               </Select>
-              </FormControl>
-            </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
+            <FormControl className={classes.formControl}>
+              <InputLabel ref={ref => {
+                this.InputLabelRef = ref;
+              }} htmlFor="synth-select">Synthesis</InputLabel>
+              <Select
+                native
+                value={this.state.voiceSynth}
+                onChange={this.handleSynthChange}
+                inputProps={{
+                  name: 'synth_select',
+                  id: 'synth-select',
+                }}
+              >
+               {this.state.voiceSynthOptions}
+             </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
             <FormControl className={classes.formControl}>
               <InputLabel ref={ref => {
                 this.InputLabelRef = ref;
@@ -207,7 +208,6 @@ class LanguageSelects extends React.Component {
              </Select>
             </FormControl>
           </Grid>
-          {this.state.speechModelCode}
         </Grid>
       </div>
     );

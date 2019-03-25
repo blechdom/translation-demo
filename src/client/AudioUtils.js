@@ -1,9 +1,9 @@
 import { socket } from './api';
 
-var concatText = '';
-var newText = '';
-var source = null;
-let bufferSize = 2048,
+let concatText = '',
+  newText = '',
+  source = null,
+  bufferSize = 2048,
   audioBuffer = null,
   active_source = false,
   processor,
@@ -22,10 +22,10 @@ function playAudioBuffer(audioFromString, context, continuous){
     source.disconnect();
     active_source=false;
   }
-  if(continuous){
-    stopStreaming(context, continuous);
+/*  if(continuous){
+    stopStreaming(context);
   }
-
+*/
   context.decodeAudioData(audioFromString, function (buffer) {
       active_source = true;
       audioBuffer = buffer;
@@ -38,7 +38,7 @@ function playAudioBuffer(audioFromString, context, continuous){
       source.onended = (event) => {
         console.log('audio playback stopped');
         if(continuous){
-          startStreaming(context, continuous);
+          startStreaming(context);
         }
       };
   }, function (e) {
@@ -65,11 +65,10 @@ function disconnectSource(context){
     active_source=false;
   }
 }
-function initRecording(context, continuous) {
+function initRecording(context) {
 
   concatText = "";
   newText = "";
-
   source = null;
   bufferSize = 2048;
   audioBuffer = null;
@@ -105,29 +104,21 @@ function microphoneProcess(e) {
   socket.emit('binaryStream', left16);
 }
 
-function startStreaming(context, continuous) {
-  console.log("start input");
-  socket.emit("startStreaming", true);
-  initRecording(context, continuous);
+function startStreaming(context) {
+  console.log("starting input");
+  //socket.emit("startStreaming", true);
+  initRecording(context);
 }
 
-function stopStreaming(context, continuous) {
+function stopStreaming(context) {
   console.log("stop input");
-  socket.emit("stopStreaming", true);
-
-  if(!continuous){
-    let track = globalStream.getTracks()[0];
-    track.stop();
-
-
-    if(input){
-      input.disconnect(processor);
-      processor.disconnect();
-    }
+//  socket.emit("stopStreaming", true);
+  let track = globalStream.getTracks()[0];
+  track.stop();
+  if(input){
+    input.disconnect(processor);
+    processor.disconnect();
   }
-
-
-
 }
 var downsampleBuffer = function (buffer, sampleRate, outSampleRate) {
     if (outSampleRate == sampleRate) {
@@ -155,4 +146,4 @@ var downsampleBuffer = function (buffer, sampleRate, outSampleRate) {
     }
     return result.buffer;
 }
-export { base64ToBuffer, playAudioBuffer, disconnectSource, startStreaming, stopStreaming }
+export { base64ToBuffer, disconnectSource, startStreaming, stopStreaming }

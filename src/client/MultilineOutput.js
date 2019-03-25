@@ -9,9 +9,6 @@ const styles = theme => ({
   root: {
     flexGrow: 1,
   },
-  isFinal: {
-    color: 'red',
-  },
   pendingText: {
     color: '#b7e1cd',
   },
@@ -37,11 +34,9 @@ class MultilineOutput extends React.Component {
 
   componentDidMount() {
     const { classes } = this.props;
-    //console.log("stt text mounted, speak too is " + this.props.speakToo);
     let socket = this.props.socket;
 
       socket.on('getTranscript', (response) => {
-        //console.log(JSON.stringify(response));
         this.setState({newText: response.transcript});
         if (this.state.newText != undefined){
           this.setState({outputText: <div>{this.state.concatText} <div className={classes.pendingText}>{this.state.newText}</div></div>});
@@ -54,27 +49,12 @@ class MultilineOutput extends React.Component {
             });
           }
         }
-        //this.setState({newText: ''});
-        //this.setState({isFinal: false});
       });
       socket.on('getTranslation', (response) => {
-        //console.log(JSON.stringify(response));
         this.setState({
           concatText: <div>{this.state.concatText} <div className={classes.translatedText}>{response}</div></div>,
           outputText: <div>{this.state.concatText} <div className={classes.translatedText}>{response}</div></div>
         });
-
-
-
-      //  this.setState({newTranslation: response});
-      //  this.setState({
-      //    concatText: <div>{this.state.concatText} {this.state.newText}</div>,
-      //  }, () => {
-      //    this.setState({outputText: <div>{this.state.concatText}</div>});
-      //  });
-      //  this.setState({outputText: <div>{this.state.concatText} <div className={classes.translatedText}>{this.state.newTranslation}</div></div>});
-
-
         this.setState({newTranslation: ''});
         this.setState({newText: ''});
         this.setState({isFinal: false});
@@ -83,9 +63,9 @@ class MultilineOutput extends React.Component {
   }
 
   componentWillUnmount(){
-    //console.log("stt text unmounted");
     let socket = this.props.socket;
     socket.off("getTranscript");
+    socket.off("getTranslation");
   }
 
   render() {

@@ -9,8 +9,8 @@ import Tab from '@material-ui/core/Tab';
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import StopStartTranslation from './StopStartTranslation';
-import ContinuousTranslation from './ContinuousTranslation';
+import Translator from './Translator';
+//import ContinuousTranslation from './ContinuousTranslation';
 
 
 const styles = theme => ({
@@ -62,7 +62,7 @@ class CloudAIDemos extends React.Component {
     super(props)
     this.state = {
       value: 0,
-      currentForm: <StopStartTranslation />
+      currentForm: <Translator />
     };
   }
   handleChangeIndex = index => {
@@ -98,10 +98,9 @@ class CloudAIDemos extends React.Component {
                 Speech-to-Speech Translation
               </Typography>
             </AppBar>
-
             <React.Fragment>
               <div className={classes.form}>
-                <StopStartTranslation />
+                {this.state.currentForm}
               </div>
             </React.Fragment>
           </Paper>
