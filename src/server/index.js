@@ -10,20 +10,19 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-var util = require('util');
-var fs = require('fs');
+const util = require('util');
+const fs = require('fs');
 
 app.use(express.static('dist'));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '')));
 
 const STREAMING_LIMIT = 55000;
-//const ISFINAL_LIMIT = 6000;
+// const ISFINAL_LIMIT = 6000;
 
-io.on('connection', socket => {
-
-  console.log("New client connected: " + socket.id);
-  let clientData = {};
+io.on('connection', (socket) => {
+  console.log('New client connected: ' + socket.id);
+  const clientData = {};
   clientData[socket.id] = {
     id: socket.id,
     speechClient: new speech.SpeechClient(),
@@ -40,70 +39,66 @@ io.on('connection', socket => {
     useEnhanced: 'false',
     enableAutomaticPunctuation: 'true',
     transcript: '',
-    //forcedIsFinal: false,
-  }
+    // forcedIsFinal: false,
+  };
 
-  socket.on('translate-text', function(data){
+  socket.on('translate-text', function(data) {
     clientData[socket.id].translateText = data;
   });
 
   socket.on('voiceCode', function(data) {
-    console.log("voice code: " + data);
+    console.log('voice code: ' + data);
     clientData[socket.id].voiceCode = data;
   });
 
   socket.on('speechLanguageCode', function(data) {
     clientData[socket.id].speechLanguageCode = data;
-
   });
   socket.on('sttLanguageCode', function(data) {
     clientData[socket.id].sttLanguageCode = data;
-    console.log("stt language code is " + data);
+    console.log('stt language code is ' + data);
   });
 
-  socket.on("startStreaming", function(data){
-    console.log("starting to stream");
+  socket.on('startStreaming', function(data) {
+    console.log('starting to stream');
     startStreaming();
   });
 
   socket.on('binaryStream', function(data) {
-    if(clientData[socket.id].recognizeStream!=null) {
+    if (clientData[socket.id].recognizeStream!=null) {
       clientData[socket.id].recognizeStream.write(data);
     }
   });
 
-  socket.on("stopStreaming", function(data){
+  socket.on('stopStreaming', function(data) {
     clearTimeout(clientData[socket.id].restartTimeoutId);
     stopStreaming();
   });
 
   socket.on('getVoiceList', function(data) {
-
-    async function getList(){
+    async function getList() {
       try {
         const [result] = await clientData[socket.id].ttsClient.listVoices({});
-        let voiceList = result.voices;
+        const voiceList = result.voices;
 
         voiceList.sort(function(a, b) {
-          var textA = a.name.toUpperCase();
-          var textB = b.name.toUpperCase();
+          const textA = a.name.toUpperCase();
+          const textB = b.name.toUpperCase();
           return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
         });
         let languageObject = {};
-        let languageName = "";
-        let languageCode = "";
-        let lastVoice = "";
+        let languageName = '';
+        let languageCode = '';
+        let lastVoice = '';
         let languageTypes = [];
 
-        let formattedVoiceList = [];
+        const formattedVoiceList = [];
 
-        for(let i in voiceList){
-
-          let voice = voiceList[i];
+        for (let i = 0; i<voiceList.length; i++) {
+          const voice = voiceList[i];
           languageCode = voice.languageCodes[0];
-          if (languageCode!=lastVoice){
-            if (languageObject.languageName!=null){
-
+          if (languageCode!=lastVoice) {
+            if (languageObject.languageName!=null) {
               languageObject.languageTypes = formatLanguageTypes(languageTypes);
               formattedVoiceList.push(languageObject);
 
@@ -115,31 +110,38 @@ io.on('connection', socket => {
             languageObject.languageName = languageName;
             languageObject.languageCode = languageCode;
 
-            languageTypes.push({voice: voice.name, gender: voice.ssmlGender, rate: voice.naturalSampleRateHertz});
-            lastVoice = languageCode;
-          }
-          else {
-            languageTypes.push({voice: voice.name, gender: voice.ssmlGender, rate: voice.naturalSampleRateHertz});
-          }
-          if(i==(voiceList.length-1)){
-              languageObject.languageTypes = formatLanguageTypes(languageTypes);
-              formattedVoiceList.push(languageObject);
+            languageTypes.push({
+              voice: voice.name,
+              gender: voice.ssmlGender,
+              rate: voice.naturalSampleRateHertz,
+            });
 
-              languageObject = {};
-              languageTypes = [];
+            lastVoice = languageCode;
+          } else {
+            languageTypes.push({
+              voice: voice.name,
+              gender: voice.ssmlGender,
+              rate: voice.naturalSampleRateHertz,
+            });
+          }
+          if (i==(voiceList.length-1)) {
+            languageObject.languageTypes = formatLanguageTypes(languageTypes);
+            formattedVoiceList.push(languageObject);
+
+            languageObject = {};
+            languageTypes = [];
           }
         }
         socket.emit('voicelist', JSON.stringify(formattedVoiceList));
-      }
-      catch(err) {
+      } catch (err) {
         console.log(err);
       }
     }
     getList();
   });
 
-  socket.on("getAudioFile", function(data){
-    console.log("getting audio file");
+  socket.on('getAudioFile', function(data) {
+    console.log('getting audio file');
     ttsTranslateAndSendAudio();
   });
 
@@ -152,9 +154,9 @@ io.on('connection', socket => {
       if (err) throw err;
 
       for (const file of files) {
-        if (file==socket.id + '.wav'){
-          console.log("deleting file: " + file);
-          fs.unlink(path.join(directory, file), err => {
+        if (file==socket.id + '.wav') {
+          console.log('deleting file: ' + file);
+          fs.unlink(path.join(directory, file), (err) => {
             if (err) throw err;
           });
         }
@@ -162,113 +164,109 @@ io.on('connection', socket => {
     });
   });
 
-  async function ttsTranslateAndSendAudio(){
-
-    var translateLanguageCode = clientData[socket.id].voiceCode.substring(0, 2); //en
-    var target = translateLanguageCode;
-    console.log("translating into " + target);
-    var text = clientData[socket.id].translateText;
-    console.log("text to translate: " + text);
-    let [translations] = await clientData[socket.id].translate.translate(text, target);
+  async function ttsTranslateAndSendAudio() {
+    const translateLanguageCode =
+      clientData[socket.id].voiceCode.substring(0, 2);
+    const target = translateLanguageCode;
+    console.log('translating into ' + target);
+    const text = clientData[socket.id].translateText;
+    console.log('text to translate: ' + text);
+    let [translations] =
+      await clientData[socket.id].translate.translate(text, target);
     translations = Array.isArray(translations) ? translations : [translations];
-    var translation_concatenated = "";
+    let translationConcatenated = '';
     translations.forEach((translation, i) => {
-      translation_concatenated += translation + " ";
+      translationConcatenated += translation + ' ';
     });
-    clientData[socket.id].ttsText = translation_concatenated;
-    socket.emit("getTranslation", translation_concatenated);
+    clientData[socket.id].ttsText = translationConcatenated;
+    socket.emit('getTranslation', translationConcatenated);
 
-    var ttsRequest = {
-      voice: {languageCode: clientData[socket.id].voiceCode.substring(0,5), name: clientData[socket.id].voiceCode},
-      audioConfig: {audioEncoding: 'LINEAR16'},
-      input: {text: clientData[socket.id].ttsText}
-    };
-
-    if ((clientData[socket.id].voiceCode=="en/us/tpd") || (clientData[socket.id].voiceCode=="en/us/tpf")){
-      console.log("tacotron2");
-      ttsRequest = {
+    let ttsRequest = {
+      voice: {
+        languageCode: clientData[socket.id].voiceCode.substring(0, 5),
         name: clientData[socket.id].voiceCode,
-        inputText: clientData[socket.id].ttsText,
-      }
-      console.log(JSON.stringify(ttsRequest, null, 4));
-      try {
-        const [response] = await clientData[socket.id].ttsClient.synthesizeTacotron2(ttsRequest);
-        const writeFile = util.promisify(fs.writeFile);
-        await writeFile('audio/' + socket.id + '.wav', response.audioContent, 'binary');
-
-        const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
-        const audioBase64 = new Buffer.from(audioFile).toString('base64');
-        console.log("audio file written " + socket.id + '.wav');
-        socket.emit('audiodata', audioBase64);
-      }
-      catch(err) {
-        console.log(err);
-      }
-    }
-    else {
-      const [response] = await clientData[socket.id].ttsClient.synthesizeSpeech(ttsRequest);
-      const writeFile = util.promisify(fs.writeFile);
-      await writeFile('audio/' + socket.id + '.wav', response.audioContent, 'binary');
+      },
+      audioConfig: {audioEncoding: 'LINEAR16'},
+      input: {text: clientData[socket.id].ttsText},
+    };
+    const [response] =
+      await clientData[socket.id].ttsClient.synthesizeSpeech(ttsRequest);
+    socket.emit('audiodata', response.audioContent);
+    //const writeFile = util.promisify(fs.writeFile);
+    //await writeFile(
+    //    'audio/' + socket.id + '.wav',
+    //    response.audioContent,
+    //    'binary'
+    //);
 
 
-      const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
-      const audioBase64 = new Buffer.from(audioFile).toString('base64');
-      console.log("audio file written " + socket.id + '.wav');
-      socket.emit('audiodata', audioBase64);
-    }
+    //const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
+    //const audioBase64 = new Buffer.from(audioFile).toString('base64');
+    //console.log('audio file written ' + socket.id + '.wav');
+    //socket.emit('audiodata', audioBase64);
+
   }
   function startStreaming() {
-    var sttRequest = {
+    const sttRequest = {
       config: {
-          encoding: 'LINEAR16',
-          sampleRateHertz: 16000,
-          languageCode: clientData[socket.id].sttLanguageCode,
-          enableAutomaticPunctuation: clientData[socket.id].enableAutomaticPunctuation,
-          model: clientData[socket.id].speechModel,
-          useEnhanced: clientData[socket.id].useEnhanced
+        encoding: 'LINEAR16',
+        sampleRateHertz: 16000,
+        languageCode: clientData[socket.id].sttLanguageCode,
+        enableAutomaticPunctuation:
+          clientData[socket.id].enableAutomaticPunctuation,
+        model: clientData[socket.id].speechModel,
+        useEnhanced: clientData[socket.id].useEnhanced,
       },
-      interimResults: true
+      interimResults: true,
     };
-    //let isFinalTimeoutID = 0;
-    //console.log("startStream request " + JSON.stringify(sttRequest, null, 4));
+    // let isFinalTimeoutID = 0;
+    // console.log("startStream request " +
+    //  JSON.stringify(sttRequest, null, 4));
     clientData[socket.id].recognizeStream = clientData[socket.id].speechClient
-      .streamingRecognize(sttRequest)
-      .on('error', (error) => {
-        console.error;
-      })
-      .on('data', (data) => {
-
-        if (data.results[0] && data.results[0].alternatives[0]){
-          console.log("results " + JSON.stringify(data.results[0].alternatives[0].transcript));
-        //  clientData[socket.id].forcedIsFinal = false;
-          clientData[socket.id].transcript = data.results[0].alternatives[0].transcript;
-        //  clearTimeout(isFinalTimeoutID);
-          //console.log("clear timeout " + isFinalTimeoutID);
-          //isFinalTimeoutID = setTimeout(forceIsFinal, ISFINAL_LIMIT, isFinalTimeoutID);
-          //console.log("set timeout " + isFinalTimeoutID);
-        //  if(!clientData[socket.id].forcedIsFinal){
-            var transcriptObject = {
+        .streamingRecognize(sttRequest)
+        .on('error', (error) => {
+          console.error;
+        })
+        .on('data', (data) => {
+          if (data.results[0] && data.results[0].alternatives[0]) {
+            console.log(
+                'results ' +
+                JSON.stringify(data.results[0].alternatives[0].transcript)
+            );
+            //  clientData[socket.id].forcedIsFinal = false;
+            clientData[socket.id].transcript =
+              data.results[0].alternatives[0].transcript;
+            //  clearTimeout(isFinalTimeoutID);
+            // console.log("clear timeout " + isFinalTimeoutID);
+            // isFinalTimeoutID = setTimeout(
+            //  forceIsFinal,
+            //  ISFINAL_LIMIT,
+            //  isFinalTimeoutID);
+            // console.log("set timeout " + isFinalTimeoutID);
+            //  if(!clientData[socket.id].forcedIsFinal){
+            const transcriptObject = {
               transcript: data.results[0].alternatives[0].transcript,
-              isfinal: data.results[0].isFinal
+              isfinal: data.results[0].isFinal,
             };
-            socket.emit("getTranscript", transcriptObject);
+            socket.emit('getTranscript', transcriptObject);
 
-            if(data.results[0].isFinal){
-              console.log("also sending audio file");
+            if (data.results[0].isFinal) {
+              console.log('also sending audio file');
               clientData[socket.id].translateText = transcriptObject.transcript;
               ttsTranslateAndSendAudio();
-          //    clearTimeout(isFinalTimeoutID);
+              //    clearTimeout(isFinalTimeoutID);
             }
-          //}
-        }
-      });
-      socket.emit("getTranscript",
-        { isstatus: "Streaming server successfully started" }
-      );
+          // }
+          }
+        });
+    socket.emit('getTranscript',
+        {isstatus: 'Streaming server successfully started'}
+    );
 
-      clientData[socket.id].restartTimeoutId = setTimeout(restartStreaming, STREAMING_LIMIT);
-    }
-    /*function forceIsFinal(isFinalTimeoutID){
+    clientData[socket.id].restartTimeoutId =
+      setTimeout(restartStreaming, STREAMING_LIMIT);
+  }
+  /* function forceIsFinal(isFinalTimeoutID){
       clientData[socket.id].forcedIsFinal = true;
       clearTimeout(isFinalTimeoutID);
       restartStreaming();
@@ -286,32 +284,28 @@ io.on('connection', socket => {
       clientData[socket.id].translateText = '';
       clientData[socket.id].transcript = '';
     }*/
-    function stopStreaming(){
-      clientData[socket.id].recognizeStream = null;
-    }
+  function stopStreaming() {
+    clientData[socket.id].recognizeStream = null;
+  }
 
-    function restartStreaming(){
-      stopStreaming();
-      startStreaming();
-    }
+  function restartStreaming() {
+    stopStreaming();
+    startStreaming();
+  }
 
-  function formatLanguageTypes(voiceObjects){
-
+  function formatLanguageTypes(voiceObjects) {
     let voiceTypes = [];
-    let voiceSynths = [];
+    const voiceSynths = [];
 
     let lastSynth = '';
     let currentSynth = '';
     let tempVoiceObject = {};
 
-    for(let i in voiceObjects){
+    for (let i = 0; i<voiceObjects.length; i++) {
+      currentSynth = voiceObjects[i].voice.slice(6, -2);
 
-      currentSynth = voiceObjects[i].voice.slice(6,-2);
-
-      if (currentSynth!=lastSynth){
-
-        if(tempVoiceObject.voiceSynth!=null){
-
+      if (currentSynth!=lastSynth) {
+        if (tempVoiceObject.voiceSynth!=null) {
           tempVoiceObject.voiceTypes = voiceTypes;
           voiceSynths.push(tempVoiceObject);
           tempVoiceObject = {};
@@ -321,14 +315,18 @@ io.on('connection', socket => {
 
         lastSynth = currentSynth;
       }
-      voiceTypes.push({voiceCode: voiceObjects[i].voice, voiceName: voiceObjects[i].voice.substr(voiceObjects[i].voice.length - 1) + " (" + voiceObjects[i].gender.substr(0,1).toLowerCase() + ")"});
+      voiceTypes.push({
+        voiceCode: voiceObjects[i].voice,
+        voiceName:
+          voiceObjects[i].voice.substr(voiceObjects[i].voice.length - 1) +
+          ' (' + voiceObjects[i].gender.substr(0, 1).toLowerCase() + ')',
+      });
 
-      if(i==(voiceObjects.length-1)){
-
-          tempVoiceObject.voiceTypes = voiceTypes;
-          voiceSynths.push(tempVoiceObject);
-          tempVoiceObject = {};
-          voiceTypes = [];
+      if (i==(voiceObjects.length-1)) {
+        tempVoiceObject.voiceTypes = voiceTypes;
+        voiceSynths.push(tempVoiceObject);
+        tempVoiceObject = {};
+        voiceTypes = [];
       }
     }
     return voiceSynths;
@@ -338,67 +336,67 @@ io.on('connection', socket => {
     let languageName;
     switch (languageCode) {
       case 'da-DK':
-        languageName = "Danish";
+        languageName = 'Danish';
         break;
       case 'de-DE':
-        languageName = "German";
+        languageName = 'German';
         break;
       case 'en-AU':
-        languageName = "English (Australia)"
+        languageName = 'English (Australia)';
         break;
       case 'en-GB':
-        languageName = "English (United Kingdom)"
+        languageName = 'English (United Kingdom)';
         break;
       case 'en-US':
-        languageName = "English (United States)";
+        languageName = 'English (United States)';
         break;
       case 'es-ES':
-        languageName = "Spanish";
+        languageName = 'Spanish';
         break;
       case 'fr-CA':
-        languageName = "French (Canada)";
+        languageName = 'French (Canada)';
         break;
       case 'fr-FR':
-        languageName = "French";
+        languageName = 'French';
         break;
       case 'it-IT':
-        languageName = "Italian"
+        languageName = 'Italian';
         break;
       case 'ja-JP':
-        languageName = "Japanese"
+        languageName = 'Japanese';
         break;
       case 'ko-KR':
-        languageName = "Korean";
+        languageName = 'Korean';
         break;
       case 'nl-NL':
-        languageName = "Dutch"
+        languageName = 'Dutch';
         break;
       case 'nb-NO':
-        languageName = "Norwegian"
+        languageName = 'Norwegian';
         break;
       case 'pl-PL':
-        languageName = "Polish";
+        languageName = 'Polish';
         break;
       case 'pt-BR':
-        languageName = "Portugese (Brazil)";
+        languageName = 'Portugese (Brazil)';
         break;
       case 'pt-PT':
-        languageName = "Portugese"
+        languageName = 'Portugese';
         break;
       case 'ru-RU':
-        languageName = "Russian";
+        languageName = 'Russian';
         break;
       case 'sk-SK':
-        languageName = "Slovak (Slovakia)";
+        languageName = 'Slovak (Slovakia)';
         break;
       case 'sv-SE':
-        languageName = "Swedish";
+        languageName = 'Swedish';
         break;
       case 'tr-TR':
-        languageName = "Turkish"
+        languageName = 'Turkish';
         break;
       case 'uk-UA':
-        languageName = "Ukrainian (Ukraine)"
+        languageName = 'Ukrainian (Ukraine)';
         break;
       default:
         languageName = languageCode;

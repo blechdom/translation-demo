@@ -8,14 +8,14 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Translator from './Translator';
 
-const styles = theme => ({
+const styles = (theme) => ({
   root: {
-      flexGrow: 1,
-      height: '100%'
+    flexGrow: 1,
+    height: '100%',
   },
   title: {
     padding: theme.spacing.unit * 2,
-     color: 'white',
+    color: 'white',
   },
   layout: {
     width: 'auto',
@@ -52,13 +52,12 @@ const styles = theme => ({
 });
 
 
-
 class TranslationDemo extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
   }
   render() {
-    const { classes } = this.props;
+    const {classes} = this.props;
 
     return (
       <React.Fragment>
