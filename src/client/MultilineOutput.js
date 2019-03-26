@@ -29,6 +29,7 @@ class MultilineOutput extends React.Component {
       newTranslation: '',
       concatText: '',
       isFinal: false,
+      resetCount: 0,
     };
   }
 
@@ -67,9 +68,20 @@ class MultilineOutput extends React.Component {
     socket.off("getTranscript");
     socket.off("getTranslation");
   }
-
+  componentWillReceiveProps(props){
+    console.log("in render props: " + this.props.reset + " and state: " + this.state.resetCount);
+    if(this.props.reset!=this.state.resetCount){
+      console.log("multiline-reset");
+      this.setState({
+        outputText:'',
+        concatText:'',
+        resetCount: this.props.reset
+      });
+    }
+  }
   render() {
     const { classes } = this.props;
+
     return (
       <div className={classes.root}>
       <Typography component="h1" variant="h5">

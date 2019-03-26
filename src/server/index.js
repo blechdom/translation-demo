@@ -18,6 +18,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '')));
 
 const STREAMING_LIMIT = 55000;
+const ISFINAL_LIMIT = 6000;
 
 io.on('connection', socket => {
 
@@ -38,17 +39,17 @@ io.on('connection', socket => {
     speechModel: 'default',
     useEnhanced: 'false',
     enableAutomaticPunctuation: 'true',
+    transcript: '',
+    forcedIsFinal: false,
   }
 
   socket.on('translate-text', function(data){
     clientData[socket.id].translateText = data;
-    //ttsText = data;
   });
 
   socket.on('voiceCode', function(data) {
     console.log("voice code: " + data);
     clientData[socket.id].voiceCode = data;
-    console.log("message is" + clientData[socket.id].voiceCode);
   });
 
   socket.on('speechLanguageCode', function(data) {
@@ -60,34 +61,9 @@ io.on('connection', socket => {
     console.log("stt language code is " + data);
   });
 
-  /*socket.on('speechModel', function(data){
-    let speechModel = data;
-    let useEnhanced = "false";
-    console.log("speech model updated " + speechModel);
-    if(speechModel=='automl'){
-      speechModel = "projects/199192281405/locations/us-central1/models/STT1270896092315763741:phone_call";
-      useEnhanced = "true";
-    }
-    else if(speechModel=='enhanced'){
-      speechModel = "phone_call";
-      useEnhanced = "true";
-    }
-    clientData[socket.id].useEnhanced = useEnhanced;
-    clientData[socket.id].speechModel = speechModel;
-  });
-  */
-
-/*  socket.on('speechPunctuation', function(data){
-    clientData[socket.id].enableAutomaticPunctuation = data;
-  });
-*/
-  socket.on('speechEnhanced', function(data){
-    clientData[socket.id].useEnhanced = data;
-  });
-
   socket.on("startStreaming", function(data){
-    console.log("starting to stream and speakToo is " + data);
-    startStreaming(data);
+    console.log("starting to stream");
+    startStreaming();
   });
 
   socket.on('binaryStream', function(data) {
@@ -122,7 +98,6 @@ io.on('connection', socket => {
         let formattedVoiceList = [];
 
         for(let i in voiceList){
-          //missing last voice ?
 
           let voice = voiceList[i];
           languageCode = voice.languageCodes[0];
@@ -217,90 +192,107 @@ io.on('connection', socket => {
       }
       console.log(JSON.stringify(ttsRequest, null, 4));
       try {
-          const [response] = await clientData[socket.id].ttsClient.synthesizeTacotron2(ttsRequest);
-          const writeFile = util.promisify(fs.writeFile);
-          await writeFile('audio/' + socket.id + '.wav', response.audioContent, 'binary');
+        const [response] = await clientData[socket.id].ttsClient.synthesizeTacotron2(ttsRequest);
+        const writeFile = util.promisify(fs.writeFile);
+        await writeFile('audio/' + socket.id + '.wav', response.audioContent, 'binary');
 
-
-          const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
-          const audioBase64 = new Buffer.from(audioFile).toString('base64');
-          console.log("audio file written " + socket.id + '.wav');
-          socket.emit('audiodata', audioBase64);
+        const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
+        const audioBase64 = new Buffer.from(audioFile).toString('base64');
+        console.log("audio file written " + socket.id + '.wav');
+        socket.emit('audiodata', audioBase64);
       }
       catch(err) {
         console.log(err);
       }
     }
     else {
+      const [response] = await clientData[socket.id].ttsClient.synthesizeSpeech(ttsRequest);
+      const writeFile = util.promisify(fs.writeFile);
+      await writeFile('audio/' + socket.id + '.wav', response.audioContent, 'binary');
 
-        const [response] = await clientData[socket.id].ttsClient.synthesizeSpeech(ttsRequest);
-        const writeFile = util.promisify(fs.writeFile);
-        await writeFile('audio/' + socket.id + '.wav', response.audioContent, 'binary');
 
-
-        const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
-        const audioBase64 = new Buffer.from(audioFile).toString('base64');
-        console.log("audio file written " + socket.id + '.wav');
-        socket.emit('audiodata', audioBase64);
-
+      const audioFile = fs.readFileSync('audio/' + socket.id + '.wav');
+      const audioBase64 = new Buffer.from(audioFile).toString('base64');
+      console.log("audio file written " + socket.id + '.wav');
+      socket.emit('audiodata', audioBase64);
     }
-
   }
-    function startStreaming(speakToo) {
-      var sttRequest = {
-        config: {
-            encoding: 'LINEAR16',
-            sampleRateHertz: 16000,
-            languageCode: clientData[socket.id].sttLanguageCode,
-            enableAutomaticPunctuation: clientData[socket.id].enableAutomaticPunctuation,
-            model: clientData[socket.id].speechModel,
-            useEnhanced: clientData[socket.id].useEnhanced
-        },
-        interimResults: true
-      };
-      console.log("speak too " + speakToo);
-      console.log("startStream request " + JSON.stringify(sttRequest, null, 4));
-      clientData[socket.id].recognizeStream = clientData[socket.id].speechClient
-        .streamingRecognize(sttRequest)
-        .on('error', (error) => {
-          console.error;
-        })
-        .on('data', (data) => {
+  function startStreaming() {
+    var sttRequest = {
+      config: {
+          encoding: 'LINEAR16',
+          sampleRateHertz: 16000,
+          languageCode: clientData[socket.id].sttLanguageCode,
+          enableAutomaticPunctuation: clientData[socket.id].enableAutomaticPunctuation,
+          model: clientData[socket.id].speechModel,
+          useEnhanced: clientData[socket.id].useEnhanced
+      },
+      interimResults: true
+    };
+    let isFinalTimeoutID = 0;
+    //console.log("startStream request " + JSON.stringify(sttRequest, null, 4));
+    clientData[socket.id].recognizeStream = clientData[socket.id].speechClient
+      .streamingRecognize(sttRequest)
+      .on('error', (error) => {
+        console.error;
+      })
+      .on('data', (data) => {
 
-          if (data.results[0] && data.results[0].alternatives[0]){
-            console.log("results " + JSON.stringify(data.results[0].alternatives[0].transcript));
-
+        if (data.results[0] && data.results[0].alternatives[0]){
+          console.log("results " + JSON.stringify(data.results[0].alternatives[0].transcript));
+          clientData[socket.id].forcedIsFinal = false;
+          clientData[socket.id].transcript = data.results[0].alternatives[0].transcript;
+          clearTimeout(isFinalTimeoutID);
+          console.log("clear timeout " + isFinalTimeoutID);
+          isFinalTimeoutID = setTimeout(forceIsFinal, ISFINAL_LIMIT, isFinalTimeoutID);
+          console.log("set timeout " + isFinalTimeoutID);
+          if(!clientData[socket.id].forcedIsFinal){
             var transcriptObject = {
               transcript: data.results[0].alternatives[0].transcript,
               isfinal: data.results[0].isFinal
             };
-            //if(speakToo){
-          //    socket.emit("getTranscriptSpeakToo", transcriptObject);
-            //}
-            //else{
-              socket.emit("getTranscript", transcriptObject);
-          //  }
+            socket.emit("getTranscript", transcriptObject);
 
-            if((data.results[0].isFinal)&&(speakToo==true)){
+            if(data.results[0].isFinal){
               console.log("also sending audio file");
               clientData[socket.id].translateText = transcriptObject.transcript;
               ttsTranslateAndSendAudio();
+              clearTimeout(isFinalTimeoutID);
             }
           }
-        });
-        socket.emit("getTranscript",
-          { isstatus: "Streaming server successfully started" }
-        );
+        }
+      });
+      socket.emit("getTranscript",
+        { isstatus: "Streaming server successfully started" }
+      );
 
-        clientData[socket.id].restartTimeoutId = setTimeout(restartStreaming, STREAMING_LIMIT, speakToo);
+      clientData[socket.id].restartTimeoutId = setTimeout(restartStreaming, STREAMING_LIMIT);
     }
-    function stopStreaming(speakToo){
+    function forceIsFinal(isFinalTimeoutID){
+      clientData[socket.id].forcedIsFinal = true;
+      clearTimeout(isFinalTimeoutID);
+      restartStreaming();
+      console.log("forcing clear timeout " + isFinalTimeoutID);
+      console.log("forcing is final");
+      var transcriptObject = {
+        transcript: clientData[socket.id].transcript,
+        isfinal: true
+      };
+      socket.emit("getTranscript", transcriptObject);
+
+      console.log("forcing send of audio file");
+      clientData[socket.id].translateText = transcriptObject.transcript;
+      ttsTranslateAndSendAudio();
+      clientData[socket.id].translateText = '';
+      clientData[socket.id].transcript = '';
+    }
+    function stopStreaming(){
       clientData[socket.id].recognizeStream = null;
     }
 
-    function restartStreaming(speakToo){
-      stopStreaming(speakToo);
-      startStreaming(speakToo);
+    function restartStreaming(){
+      stopStreaming();
+      startStreaming();
     }
 
   function formatLanguageTypes(voiceObjects){

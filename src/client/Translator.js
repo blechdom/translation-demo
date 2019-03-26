@@ -2,34 +2,30 @@ import React from 'react';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import LanguageSelects from './LanguageSelects';
-//import ParameterOptions from './ParameterOptions';
 import MultilineOutput from './MultilineOutput';
 import Button from '@material-ui/core/Button';
 import { socket } from './api';
-import { startStreaming, stopStreaming, base64ToBuffer, disconnectSource } from './AudioUtils';
+import { startStreaming, stopStreaming, base64ToBuffer } from './AudioUtils';
 
 
-let concatText = '',
-  newText = '',
-  source = null,
-  bufferSize = 2048,
+let source = null,
   audioBuffer = null,
-  active_source = false,
-  processor,
-  input,
-  globalStream;
+  active_source = false;
 
-class SpeechTextSpeech extends React.Component {
+class SpeechTranslateSpeech extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
       audio: false,
       micText: "Click to Start",
-      started: false
+      started: false,
+      reset: 0,
     };
     this.toggleListen = this.toggleListen.bind(this);
     this.playAudioBuffer = this.playAudioBuffer.bind(this);
+    this.resetMic = this.resetMic.bind(this);
+
   }
 
   componentDidMount() {
@@ -40,9 +36,7 @@ class SpeechTextSpeech extends React.Component {
       var audioFromString = base64ToBuffer(data);
       this.stopListening();
       this.playAudioBuffer(audioFromString, this.audioContext, true);
-
     });
-    //this.toggleListen();
   }
   componentWillUnmount() {
     this.stopListening();
@@ -54,7 +48,7 @@ class SpeechTextSpeech extends React.Component {
     if(!this.state.audio){
       socket.emit("startStreaming", true);
       startStreaming(this.audioContext);
-      this.setState({audio: true});
+      this.setState({audio: true, started: true});
       console.log("startListening");
     }
   }
@@ -76,18 +70,27 @@ class SpeechTextSpeech extends React.Component {
         this.startListening();
       }
   }
-
-  playAudioBuffer(audioFromString, context, continuous){
+  async resetMic(){
+    console.log("resetting mic and stream");
+    let resetCount = this.state.reset + 1;
+    this.setState({
+      micText: 'Click to Start',
+      started: false,
+      reset: resetCount,
+    });
+    await this.stopListening();
+    //Reset count has to be set twice for it to register when STT language changes. I tried to find another way.
+    this.setState({
+      reset: resetCount,
+    });
+  }
+  playAudioBuffer(audioFromString, context){
 
     if (active_source){
       source.stop(0);
       source.disconnect();
       active_source=false;
     }
-  /*  if(continuous){
-      stopStreaming(context);
-    }
-  */
     context.decodeAudioData(audioFromString, (buffer) => {
         active_source = true;
         audioBuffer = buffer;
@@ -99,7 +102,7 @@ class SpeechTextSpeech extends React.Component {
         active_source = true;
         source.onended = (event) => {
           console.log('audio playback stopped');
-          if(continuous){
+          if(this.state.started){
             this.startListening();
           }
         };
@@ -111,14 +114,14 @@ class SpeechTextSpeech extends React.Component {
     return (
       <React.Fragment>
         <Grid container spacing={24}>
-          <Grid item xs={12} zeroMinWidth>
-            <LanguageSelects socket={socket} handleFormValidation={this.handleFormValidation} speechModel="true"/>
+          <Grid item xs={12}>
+            <LanguageSelects socket={socket} resetMic={this.resetMic}/>
           </Grid>
           <Grid item xs={12}>
             <Button variant="contained" color="primary" onClick={this.toggleListen}>{this.state.audio ? 'Mic Active' : this.state.micText}</Button>
           </Grid>
           <Grid item xs={12}>
-            <MultilineOutput socket={socket} speakToo="true" />
+            <MultilineOutput socket={socket} reset={this.state.reset}/>
           </Grid>
         </Grid>
       </React.Fragment>
@@ -126,4 +129,4 @@ class SpeechTextSpeech extends React.Component {
   }
 }
 
-export default SpeechTextSpeech;
+export default SpeechTranslateSpeech;

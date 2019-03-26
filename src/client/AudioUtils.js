@@ -1,11 +1,6 @@
 import { socket } from './api';
 
-let concatText = '',
-  newText = '',
-  source = null,
-  bufferSize = 2048,
-  audioBuffer = null,
-  active_source = false,
+let bufferSize = 2048,
   processor,
   input,
   globalStream;
@@ -15,36 +10,6 @@ const constraints = {
   video: false
 };
 
-function playAudioBuffer(audioFromString, context, continuous){
-
-  if (active_source){
-    source.stop(0);
-    source.disconnect();
-    active_source=false;
-  }
-/*  if(continuous){
-    stopStreaming(context);
-  }
-*/
-  context.decodeAudioData(audioFromString, function (buffer) {
-      active_source = true;
-      audioBuffer = buffer;
-      source = context.createBufferSource();
-      source.buffer = audioBuffer;
-      source.loop = false;
-      source.connect(context.destination);
-      source.start(0);
-      active_source = true;
-      source.onended = (event) => {
-        console.log('audio playback stopped');
-        if(continuous){
-          startStreaming(context);
-        }
-      };
-  }, function (e) {
-      console.log('Error decoding file', e);
-  });
-}
 var base64ToBuffer = function (buffer) {
   var binary = window.atob(buffer);
   var buffer = new ArrayBuffer(binary.length);
@@ -54,25 +19,10 @@ var base64ToBuffer = function (buffer) {
   }
   return buffer;
 };
-function disconnectSource(context){
-  console.log("disconnecting");
-  if(source){
-    source.stop(0);
-    if(context.destination){
-      source.disconnect(context.destination);
-    }
-    source.disconnect();
-    active_source=false;
-  }
-}
+
 function initRecording(context) {
 
-  concatText = "";
-  newText = "";
-  source = null;
   bufferSize = 2048;
-  audioBuffer = null;
-  active_source = false;
   processor = null;
   input = null;
   globalStream = null;
@@ -106,13 +56,11 @@ function microphoneProcess(e) {
 
 function startStreaming(context) {
   console.log("starting input");
-  //socket.emit("startStreaming", true);
   initRecording(context);
 }
 
 function stopStreaming(context) {
   console.log("stop input");
-//  socket.emit("stopStreaming", true);
   let track = globalStream.getTracks()[0];
   track.stop();
   if(input){
@@ -125,7 +73,7 @@ var downsampleBuffer = function (buffer, sampleRate, outSampleRate) {
         return buffer;
     }
     if (outSampleRate > sampleRate) {
-        throw "downsampling rate show be smaller than original sample rate";
+        throw "downsample rate must be less than original sample rate";
     }
     var sampleRateRatio = sampleRate / outSampleRate;
     var newLength = Math.round(buffer.length / sampleRateRatio);
@@ -146,4 +94,4 @@ var downsampleBuffer = function (buffer, sampleRate, outSampleRate) {
     }
     return result.buffer;
 }
-export { base64ToBuffer, disconnectSource, startStreaming, stopStreaming }
+export { base64ToBuffer, startStreaming, stopStreaming }
