@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '')));
 
 const STREAMING_LIMIT = 55000;
-const ISFINAL_LIMIT = 6000;
+//const ISFINAL_LIMIT = 6000;
 
 io.on('connection', socket => {
 
@@ -40,7 +40,7 @@ io.on('connection', socket => {
     useEnhanced: 'false',
     enableAutomaticPunctuation: 'true',
     transcript: '',
-    forcedIsFinal: false,
+    //forcedIsFinal: false,
   }
 
   socket.on('translate-text', function(data){
@@ -229,7 +229,7 @@ io.on('connection', socket => {
       },
       interimResults: true
     };
-    let isFinalTimeoutID = 0;
+    //let isFinalTimeoutID = 0;
     //console.log("startStream request " + JSON.stringify(sttRequest, null, 4));
     clientData[socket.id].recognizeStream = clientData[socket.id].speechClient
       .streamingRecognize(sttRequest)
@@ -240,13 +240,13 @@ io.on('connection', socket => {
 
         if (data.results[0] && data.results[0].alternatives[0]){
           console.log("results " + JSON.stringify(data.results[0].alternatives[0].transcript));
-          clientData[socket.id].forcedIsFinal = false;
+        //  clientData[socket.id].forcedIsFinal = false;
           clientData[socket.id].transcript = data.results[0].alternatives[0].transcript;
-          clearTimeout(isFinalTimeoutID);
-          console.log("clear timeout " + isFinalTimeoutID);
-          isFinalTimeoutID = setTimeout(forceIsFinal, ISFINAL_LIMIT, isFinalTimeoutID);
-          console.log("set timeout " + isFinalTimeoutID);
-          if(!clientData[socket.id].forcedIsFinal){
+        //  clearTimeout(isFinalTimeoutID);
+          //console.log("clear timeout " + isFinalTimeoutID);
+          //isFinalTimeoutID = setTimeout(forceIsFinal, ISFINAL_LIMIT, isFinalTimeoutID);
+          //console.log("set timeout " + isFinalTimeoutID);
+        //  if(!clientData[socket.id].forcedIsFinal){
             var transcriptObject = {
               transcript: data.results[0].alternatives[0].transcript,
               isfinal: data.results[0].isFinal
@@ -257,9 +257,9 @@ io.on('connection', socket => {
               console.log("also sending audio file");
               clientData[socket.id].translateText = transcriptObject.transcript;
               ttsTranslateAndSendAudio();
-              clearTimeout(isFinalTimeoutID);
+          //    clearTimeout(isFinalTimeoutID);
             }
-          }
+          //}
         }
       });
       socket.emit("getTranscript",
@@ -268,7 +268,7 @@ io.on('connection', socket => {
 
       clientData[socket.id].restartTimeoutId = setTimeout(restartStreaming, STREAMING_LIMIT);
     }
-    function forceIsFinal(isFinalTimeoutID){
+    /*function forceIsFinal(isFinalTimeoutID){
       clientData[socket.id].forcedIsFinal = true;
       clearTimeout(isFinalTimeoutID);
       restartStreaming();
@@ -285,7 +285,7 @@ io.on('connection', socket => {
       ttsTranslateAndSendAudio();
       clientData[socket.id].translateText = '';
       clientData[socket.id].transcript = '';
-    }
+    }*/
     function stopStreaming(){
       clientData[socket.id].recognizeStream = null;
     }

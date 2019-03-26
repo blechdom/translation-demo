@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import CloudAIDemos from './CloudAIDemos';
+import TranslationDemo from './TranslationDemo';
 import './styles/app.css';
 
 export default class App extends Component {
@@ -7,7 +7,7 @@ export default class App extends Component {
   render() {
     return (
       <div>
-        <CloudAIDemos />
+        <TranslationDemo />
       </div>
     );
   }

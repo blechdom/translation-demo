@@ -2,20 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import withStyles from '@material-ui/core/styles/withStyles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Toolbar from '@material-ui/core/Toolbar';
 import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Translator from './Translator';
-//import ContinuousTranslation from './ContinuousTranslation';
-
 
 const styles = theme => ({
   root: {
       flexGrow: 1,
+      height: '100%'
   },
   title: {
     padding: theme.spacing.unit * 2,
@@ -57,36 +53,12 @@ const styles = theme => ({
 
 
 
-class CloudAIDemos extends React.Component {
+class TranslationDemo extends React.Component {
   constructor (props) {
-    super(props)
-    this.state = {
-      value: 0,
-      currentForm: <Translator />
-    };
+    super(props);
   }
-  handleChangeIndex = index => {
-    this.setState({ value: index });
-  };
-  getTabContent = (event, value) => {
-    let formName = '';
-    switch (value) {
-      case 0:
-        formName = <StopStartTranslation />;
-        break;
-      case 1:
-        formName = <ContinuousTranslation />;
-        break;
-      default:
-        throw new Error('Unknown Tab');
-        break;
-    }
-    this.setState({ value: value, currentForm: formName });
-  };
-
   render() {
     const { classes } = this.props;
-    const { value } = this.state;
 
     return (
       <React.Fragment>
@@ -100,7 +72,7 @@ class CloudAIDemos extends React.Component {
             </AppBar>
             <React.Fragment>
               <div className={classes.form}>
-                {this.state.currentForm}
+                <Translator />
               </div>
             </React.Fragment>
           </Paper>
@@ -110,8 +82,8 @@ class CloudAIDemos extends React.Component {
   }
 }
 
-CloudAIDemos.propTypes = {
+TranslationDemo.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(CloudAIDemos);
+export default withStyles(styles)(TranslationDemo);
