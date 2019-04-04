@@ -10,17 +10,7 @@ const constraints = {
   video: false,
 };
 
-const base64ToBuffer = function(bufferAtoB) {
-  const binary = window.atob(bufferAtoB);
-  const buffer = new ArrayBuffer(binary.length);
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < buffer.byteLength; i++) {
-    bytes[i] = binary.charCodeAt(i) & 0xFF;
-  }
-  return buffer;
-};
-
-function initRecording(context) {
+function startStreaming(context) {
   bufferSize = 2048;
   processor = null;
   input = null;
@@ -49,17 +39,10 @@ function initRecording(context) {
 function microphoneProcess(e) {
   const left = e.inputBuffer.getChannelData(0);
   const left16 = downsampleBuffer(left, 44100, 16000);
-  console.log('sending audio chunks');
   socket.emit('binaryStream', left16);
 }
 
-function startStreaming(context) {
-  console.log('starting input');
-  initRecording(context);
-}
-
 function stopStreaming(context) {
-  console.log('stop input');
   const track = globalStream.getTracks()[0];
   track.stop();
   if (input) {
@@ -95,4 +78,4 @@ const downsampleBuffer = function(buffer, sampleRate, outSampleRate) {
   }
   return result.buffer;
 };
-export {base64ToBuffer, startStreaming, stopStreaming};
+export {startStreaming, stopStreaming};

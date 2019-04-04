@@ -61,33 +61,33 @@ class LanguageSelects extends React.Component {
     this._isMounted = false;
   }
   handleSTTChange = (event) => {
-    console.log("handle stt language change " + event.target.value);
+    //console.log("handle stt language change " + event.target.value);
     this.resetParentMic();
     this.setState({ sttLanguage: event.target.value }, () => this.emitSTTCode());
   };
   handleLanguageChange = (event) => {
-    console.log("handle Language change " + event.target.value);
+    //console.log("handle Language change " + event.target.value);
     this.resetParentMic();
     this.setState({languageCode: event.target.value }, () => this.populateVoiceSynthSelect());
   };
   handleSynthChange = (event) => {
     this.resetParentMic();
-    console.log("handle synth change " + event.target.value);
+    //console.log("handle synth change " + event.target.value);
     this.setState({ voiceSynth: event.target.value}, () => this.populateVoiceTypeSelect());
   };
   handleVoiceChange = (event) => {
     this.resetParentMic();
-    console.log("handle voice change " + event.target.value);
+    //console.log("handle voice change " + event.target.value);
     this.setState({ voiceType: event.target.value }, () => this.emitVoiceCode());
   };
   resetParentMic(){
-    console.log("reset parent mic");
+    //console.log("reset parent mic");
     this.props.resetMic();
   }
 
   emitVoiceCode(){
     let voiceType = this.state.voiceType;
-    console.log("emitting voice code");
+    //console.log("emitting voice code");
     let socket = this.props.socket;
     socket.emit("voiceCode", voiceType);
   }
@@ -99,7 +99,7 @@ class LanguageSelects extends React.Component {
   }
   populateVoiceSynthSelect(){
     let languageCode = this.state.languageCode;
-    console.log("populate synth with language code " + languageCode);
+    //console.log("populate synth with language code " + languageCode);
     let voiceObjects = [];
     let voicelist = this.state.voices;
     voiceObjects = voicelist.find(x => x.languageCode === languageCode).languageTypes;

@@ -15,10 +15,12 @@ const styles = theme => ({
     padding: theme.spacing.unit * 2,
   },
   pendingText: {
-    color: '#b7e1cd',
+    color: '#ee918d',
+    display:"block",
   },
   translatedText: {
-    color: '#ee918d',
+    color: '#b7e1cd',
+    display:"block",
   },
 });
 
@@ -65,7 +67,6 @@ class MultilineOutput extends React.Component {
       this.setState({newText: ''});
       this.setState({isFinal: false});
     });
-
     this.scrollToBottom();
   }
 
@@ -82,10 +83,11 @@ class MultilineOutput extends React.Component {
     socket.off("getTranscript");
     socket.off("getTranslation");
   }
+
   componentWillReceiveProps(props){
-    console.log("in render props: " + this.props.reset + " and state: " + this.state.resetCount);
+    //console.log("in render props: " + this.props.reset + " and state: " + this.state.resetCount);
     if(this.props.reset!=this.state.resetCount){
-      console.log("multiline-reset");
+      //console.log("multiline-reset");
       this.setState({
         outputText:'',
         concatText:'',
@@ -105,7 +107,6 @@ class MultilineOutput extends React.Component {
              </div>
           </Typography>
         </Paper>
-
       </div>
     );
   }

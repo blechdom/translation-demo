@@ -5,8 +5,7 @@ import LanguageSelects from './LanguageSelects';
 import MultilineOutput from './MultilineOutput';
 import Button from '@material-ui/core/Button';
 import {socket} from './api';
-import {startStreaming, stopStreaming, base64ToBuffer} from './AudioUtils';
-
+import {startStreaming, stopStreaming} from './AudioUtils';
 
 let source = null;
 let audioBuffer = null;
@@ -27,15 +26,9 @@ class SpeechTranslateSpeech extends React.Component {
   }
 
   componentDidMount() {
-    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-    socket.on('audiodata', (data) => {
-      //const audioFromString = base64ToBuffer(data);
-      this.stopListening();
-      //this.playAudioBuffer(audioFromString, this.audioContext, true);
-      this.playAudioBuffer(data, this.audioContext, true);
-    });
   }
+
   componentWillUnmount() {
     this.stopListening();
     this.audioContext.close();
@@ -43,11 +36,19 @@ class SpeechTranslateSpeech extends React.Component {
   }
 
   async startListening() {
+    if(!this.state.started) {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      socket.on('audiodata', (data) => {
+        this.stopListening();
+        this.playAudioBuffer(data, this.audioContext, true);
+      });
+    }
+
     if (!this.state.audio) {
       socket.emit('startStreaming', true);
       startStreaming(this.audioContext);
       this.setState({audio: true, started: true});
-      console.log('startListening');
     }
   }
   stopListening() {
@@ -55,21 +56,21 @@ class SpeechTranslateSpeech extends React.Component {
       socket.emit('stopStreaming', true);
       this.setState({audio: false});
       stopStreaming(this.audioContext);
-      console.log('stopListening');
     }
   }
   toggleListen() {
     if (!this.state.started) {
-      this.setState({micText: 'Mic Muted', started: true});
+      this.setState({micText: 'Click to Start', started: true});
     }
     if (this.state.audio) {
+      socket.emit('forceFinal', true);
       this.stopListening();
     } else {
       this.startListening();
     }
   }
   async resetMic() {
-    console.log('resetting mic and stream');
+    //console.log('resetting mic and stream');
     const resetCount = this.state.reset + 1;
     this.setState({
       micText: 'Click to Start',
@@ -82,6 +83,7 @@ class SpeechTranslateSpeech extends React.Component {
       reset: resetCount,
     });
   }
+
   playAudioBuffer(audioFromString, context) {
     if (active_source) {
       source.stop(0);
@@ -91,18 +93,21 @@ class SpeechTranslateSpeech extends React.Component {
     context.decodeAudioData(audioFromString, (buffer) => {
       active_source = true;
       audioBuffer = buffer;
-      source = context.createBufferSource();
-      source.buffer = audioBuffer;
-      source.loop = false;
-      source.connect(context.destination);
-      source.start(0);
-      active_source = true;
-      source.onended = (event) => {
-        console.log('audio playback stopped');
+      try {
+        source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.loop = false;
+        source.connect(context.destination);
+        source.start(0);
+        active_source = true;
+      } catch (e) {
+        console.error(e);
+      }
+    /*  source.onended = (event) => {
         if (this.state.started) {
           this.startListening();
         }
-      };
+      };*/
     }, function(e) {
       console.log('Error decoding file', e);
     });
@@ -115,7 +120,7 @@ class SpeechTranslateSpeech extends React.Component {
             <LanguageSelects socket={socket} resetMic={this.resetMic}/>
           </Grid>
           <Grid item xs={12}>
-            <Button variant="contained" color="primary" onClick={this.toggleListen}>{this.state.audio ? 'Mic Active' : this.state.micText}</Button>
+            <Button variant="contained" color={this.state.audio ? 'secondary' : 'primary'} onClick={this.toggleListen}>{this.state.audio ? 'Mic Active' : this.state.micText}</Button>
           </Grid>
           <Grid item xs={12}>
             <MultilineOutput socket={socket} reset={this.state.reset}/>
